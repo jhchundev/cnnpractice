@@ -1,0 +1,5 @@
+numpy~=1.26.3
+torchvision~=0.15.2
+torch
+tqdm~=4.65.0
+optuna~=3.5.0
