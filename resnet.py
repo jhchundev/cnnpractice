@@ -14,8 +14,8 @@ transform = transforms.Compose([
 
 
 # CIFAR-10 のダウンロード、読み込み
-trainset = torchvision.datasets.CIFAR10(root='./', train=True, download=True, transform=transform)
-testset = torchvision.datasets.CIFAR10(root='./', train=False, download=True, transform=transform)
+trainset = torchvision.datasets.CIFAR10(root='./data/', train=True, download=True, transform=transform)
+testset = torchvision.datasets.CIFAR10(root='./data/', train=False, download=True, transform=transform)
 
 
 class BasicBlock(nn.Module):
@@ -103,7 +103,7 @@ class ResNet(nn.Module):
 def objective(trial):
     # Define hyperparameters
     lr = trial.suggest_float("lr", 1e-5, 1e-1, log=True)
-    batch_size = trial.suggest_categorical("batch_size", [32, 64, 128, 256])
+    batch_size = 1024
     dropout_rate = trial.suggest_float("dropout_rate", 0.1, 0.5)
 
     # Initialize model
@@ -115,7 +115,12 @@ def objective(trial):
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False)
 
     # Check if GPU is available
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    if torch.cuda.is_available():
+        device = torch.device("cuda:0")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
     model.to(device)
 
     for epoch in range(5):
