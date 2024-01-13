@@ -103,7 +103,7 @@ class ResNet(nn.Module):
 def objective(trial):
     # Define hyperparameters
     lr = trial.suggest_float("lr", 1e-5, 1e-1, log=True)
-    batch_size = 1024
+    batch_size = trial.suggest_categorical("batch_size", [32, 64, 128, 256])
     dropout_rate = trial.suggest_float("dropout_rate", 0.1, 0.5)
 
     # Initialize model
@@ -123,7 +123,7 @@ def objective(trial):
         device = torch.device("cpu")
     model.to(device)
 
-    for epoch in range(5):
+    for epoch in range(10):
         model.train()
         for batch in tqdm(trainloader):
             image, label = batch[0].to(device), batch[1].to(device)
