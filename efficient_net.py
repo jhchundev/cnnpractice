@@ -187,7 +187,12 @@ def objective(trial):
     loss_func = nn.CrossEntropyLoss()
 
     # Check if GPU is available
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    if torch.cuda.is_available():
+        device = torch.device("cuda:0")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
     model.to(device)
 
     # Training loop
