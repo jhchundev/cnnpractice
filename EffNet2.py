@@ -158,22 +158,8 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True
 testloader = torch.utils.data.DataLoader(testset, batch_size=256, shuffle=False)
 
 
-def objective(trial):
-    # EfficientNet specific hyperparameters
-    width_mult = trial.suggest_float('width_mult', 1.0, 3.0)
-    depth_mult = trial.suggest_float('depth_mult', 1.5, 4.0)
-    dropout_rate = trial.suggest_float('dropout_rate', 0.2, 0.8)
-
-    # Other hyperparameters
-    lr = trial.suggest_float("lr", 1e-5, 1e-1, log=True)
-    beta1 = trial.suggest_float("beta1", 0.9, 0.999)
-    beta2 = trial.suggest_float("beta2", 0.9, 0.999)
-    weight_decay = trial.suggest_float("weight_decay", 1e-6, 1e-2, log=True)
-
-    # Initialize the EfficientNet model
-    model = EfficientNet(width_mult=width_mult, depth_mult=depth_mult, dropout_rate=dropout_rate)
-    optimizer = optim.Adam(model.parameters(), lr=lr, betas=(beta1, beta2), weight_decay=weight_decay)
-    loss_func = nn.CrossEntropyLoss()
+def main():
+    model = efficientnet_b7()
 
     # Check if GPU is available
     if torch.cuda.is_available():
@@ -186,15 +172,6 @@ def objective(trial):
 
     # Training loop
     for epoch in range(5):
-        model.train()
-        for batch in tqdm(trainloader):
-            image, label = batch[0].to(device), batch[1].to(device)
-            optimizer.zero_grad()
-            pred = model(image)
-            loss = loss_func(pred, label)
-            loss.backward()
-            optimizer.step()
-
         # Validation loop
         model.eval()
         acc_list = []
@@ -204,12 +181,21 @@ def objective(trial):
                 pred = model(image)
                 accuracy = 100 * torch.sum(torch.argmax(pred, dim=1) == label) / len(pred)
                 acc_list.append(accuracy.item())
+    print(np.mean(acc_list))
 
-    return np.mean(acc_list)
+
+def _efficientnet(w_mult, d_mult, resolution, drop_rate,
+                  input_ch, num_classes=1000):
+    model = EfficientNet(w_mult, d_mult,
+                         resolution, drop_rate,
+                         input_ch, num_classes)
+    return model
 
 
-study = optuna.create_study(direction='maximize')
-study.optimize(objective, n_trials=30)
+def efficientnet_b7(input_ch=3, num_classes=1000):
+    # (w_mult, d_mult, resolution, droprate) = (2.0, 3.1, 600, 0.5)
+    return _efficientnet(2.0, 3.1, None, 0.5, input_ch, num_classes)
 
-best_params = study.best_params
-print("Best parameters:", best_params)
+
+if __name__ == '__main__':
+    main()
