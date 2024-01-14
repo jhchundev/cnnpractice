@@ -123,7 +123,7 @@ def objective(trial):
         device = torch.device("cpu")
     model.to(device)
 
-    for epoch in range(5):
+    for epoch in range(15):
         model.train()
         for batch in tqdm(trainloader):
             image, label = batch[0].to(device), batch[1].to(device)
@@ -148,7 +148,7 @@ def objective(trial):
 
 # Create a study object and optimize the objective function
 study = optuna.create_study(direction="maximize")
-study.optimize(objective, n_trials=20)
+study.optimize(objective, n_trials=100)
 
 # Best hyperparameters
 print(study.best_trial.params)
